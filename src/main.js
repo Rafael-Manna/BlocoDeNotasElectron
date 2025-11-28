@@ -1,7 +1,8 @@
-import {app, BrowserWindow, nativeTheme, ipcMain, Menu} from 'electron'
+import {app, BrowserWindow, nativeTheme, ipcMain, Menu, dialog} from 'electron'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import fs from 'node:fs'
+import { title } from 'node:process'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename) 
@@ -42,6 +43,7 @@ function criarJanela(){
 const template = [
     {label: "Aplicação", 
         submenu:[
+            {label: "Salvar", click: () => salvarNota()},  
             {label: "Novo", click: () => criarJanela()},  
             {label: "Sair", role: 'quit'}]}, 
             {label: "Sobre", click: () => criarJanela2()},
@@ -80,8 +82,18 @@ function salvarNota (conteudo){
         console.error(err)
     }
 }
-ipcMain.handle('salvar', (event, texto) =>{
+ipcMain.handle('salvar', async(event, texto) =>{
     // console.log('Texto: ',texto)
-    salvarNota(texto)    
-    return caminhoArquivo
+    let dialogo = await dialog.showSaveDialog({
+        defaultPath: 'nota.txt',
+        filters: [{ name: 'Text Files', extensions: ['txt'] }],
+        title: 'Salvar Nota'
+    })
+    if (dialogo.canceled) {
+        return 
+    } else {
+        caminhoArquivo = dialogo.filePath
+        salvarNota(texto)    
+           return caminhoArquivo
+    }
 })
