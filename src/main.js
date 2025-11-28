@@ -37,13 +37,13 @@ function criarJanela(){
     janela.webContents.on('context-menu', () => {
         menu.popup({window: janela})
     })
-    janela.webContents.openDevTools();
+  //  janela.webContents.openDevTools();
 }
 
 const template = [
     {label: "Aplicação", 
         submenu:[
-            {label: "Salvar", click: () => salvarNota()},  
+            {label: "Salvar", click: () => janela.webContents.send('salvarNota')},  
             {label: "Novo", click: () => criarJanela()},  
             {label: "Sair", role: 'quit'}]}, 
             {label: "Sobre", click: () => criarJanela2()},
@@ -82,7 +82,7 @@ function salvarNota (conteudo){
         console.error(err)
     }
 }
-ipcMain.handle('salvar', async(event, texto) =>{
+ipcMain.handle('salvar', async(event, conteudo) =>{
     // console.log('Texto: ',texto)
     let dialogo = await dialog.showSaveDialog({
         defaultPath: 'nota.txt',
@@ -93,7 +93,8 @@ ipcMain.handle('salvar', async(event, texto) =>{
         return 
     } else {
         caminhoArquivo = dialogo.filePath
-        salvarNota(texto)    
+        salvarNota(conteudo)    
            return caminhoArquivo
     }
 })
+
