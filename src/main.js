@@ -43,7 +43,8 @@ function criarJanela(){
 const template = [
     {label: "Aplicação", 
         submenu:[
-            {label: "Salvar", click: () => janela.webContents.send('salvarNota')},  
+            {label: "Salvar", click: () => janela.webContents.send('salvarNota')},
+            {label: "Abrir", click: () => janela.webContents.send('abrirNota')},  
             {label: "Novo", click: () => criarJanela()},  
             {label: "Sair", role: 'quit'}]}, 
             {label: "Sobre", click: () => criarJanela2()},
@@ -98,3 +99,18 @@ ipcMain.handle('salvar', async(event, conteudo) =>{
     }
 })
 
+//Função para abrir o arquivo
+function abrirNota (conteudo1){
+    try{
+        fs.readFileSync(caminhoArquivo, conteudo, 'utf-8') 
+    }catch(err){
+        console.error(err)
+    }
+}
+ipcMain.handle('open', async(event, conteudo1)) =>{
+    let dialogo = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: 'Text Files', extensions: ['txt'] }],
+        title: 'Abrir Nota'
+})
+}

@@ -8,4 +8,12 @@ function salvarNota1() {
 
 window.api.receberNota(() => {
     salvarNota1()
+
+function abrirNota1() {
+window.api.abrirNota().then((data) => {
+    conteudo.value = data
 })
+}
+})
+
+
