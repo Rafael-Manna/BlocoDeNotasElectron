@@ -2,7 +2,6 @@ import {app, BrowserWindow, nativeTheme, ipcMain, Menu, dialog} from 'electron'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import fs from 'node:fs'
-import { title } from 'node:process'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename) 
@@ -83,8 +82,9 @@ function salvarNota (conteudo){
         console.error(err)
     }
 }
+
+// Handler para salvar nota
 ipcMain.handle('salvar', async(event, conteudo) =>{
-    // console.log('Texto: ',texto)
     let dialogo = await dialog.showSaveDialog({
         defaultPath: 'nota.txt',
         filters: [{ name: 'Text Files', extensions: ['txt'] }],
@@ -95,22 +95,66 @@ ipcMain.handle('salvar', async(event, conteudo) =>{
     } else {
         caminhoArquivo = dialogo.filePath
         salvarNota(conteudo)    
-           return caminhoArquivo
+        return caminhoArquivo
     }
 })
 
 //Função para abrir o arquivo
-function abrirNota (conteudo1){
+function lerNota(caminho) {
     try{
-        fs.readFileSync(caminhoArquivo, conteudo, 'utf-8') 
+        return fs.readFileSync(caminho, 'utf-8') 
     }catch(err){
         console.error(err)
+        return ''
     }
 }
-ipcMain.handle('open', async(event, conteudo1)) =>{
+
+// Handler para abrir nota
+ipcMain.handle('open', async(event) =>{
     let dialogo = await dialog.showOpenDialog({
         properties: ['openFile'],
         filters: [{ name: 'Text Files', extensions: ['txt'] }],
         title: 'Abrir Nota'
+    })
+    
+    if (dialogo.canceled || dialogo.filePaths.length === 0) {
+        return { content: '', path: '' }
+    } else {
+        caminhoArquivo = dialogo.filePaths[0]
+        const conteudo = lerNota(caminhoArquivo)
+        return { content: conteudo, path: caminhoArquivo }
+    }
 })
+
+// Handler para enviar evento de salvar para a janela
+ipcMain.on('salvarNota', () => {
+    janela.webContents.send('salvarNota')
+})
+
+// Handler para enviar evento de abrir para a janela
+ipcMain.on('abrirNota', () => {
+    janela.webContents.send('abrirNota')
+})
+
+// Função auxiliar para criar janela "Sobre"
+function criarJanela2() {
+    const aboutWindow = new BrowserWindow({
+        width: 400,
+        height: 300,
+        title: "Sobre",
+        resizable: false,
+        modal: true,
+        parent: janela
+    })
+    
+    aboutWindow.loadURL(`data:text/html;charset=utf-8,
+        <html>
+            <body style="font-family: Arial; padding: 20px; text-align: center;">
+                <h2>Bloco de Notas</h2>
+                <p>Versão 1.0.0</p>
+                <p>Aplicação de bloco de notas simples</p>
+                <p>Desenvolvido com Electron</p>
+            </body>
+        </html>
+    `)
 }
